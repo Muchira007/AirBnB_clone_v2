@@ -118,38 +118,42 @@ class HBNBCommand(cmd.Cmd):
         allow for parameters to be passed
         with syntax <key value>=<value>"""
         try:
-            if not args:
-                raise SyntaxError()
+            class_name = args.split(" ")[0]
+        except IndexError:
+            pass
 
-            new_list = args.split(" ")
-            kwargs = {}
-            for i in range(1, len(new_list)):
-                key, value = tuple(new_list[i].split("="))
-                if value[0] == '"':
-                    value = value.strip('"').replace("_", " ")
-                else:
-                    try:
-                        value = eval(value)
-                    except (SyntaxError, NameError):
-                        continue
-                kwargs[key] = value
+        if not class_name:
+            print("** please provide a class name **")
+            return
 
-            if '__class__' in kwargs:
-                del kwargs['__class__']
+        elif class_name not in HBNBCommand.classes:
+            print("** the specified class does not exist **")
+            return
 
-            if kwargs == {}:
-                obj = eval(new_list[0])()
-            else:
-                obj = eval(new_list[0])(**kwargs)
-                storage.new(obj)
+        tokens = args.split(" ")
+        new_instance = eval(class_name)()
 
-            print(obj.id)
-            obj.save()
+        for item in range(1, len(tokens)):
+            key, value = tuple(tokens[item].split("="))
 
-        except SyntaxError as e:
-            print(e)
-        except NameError:
-            print("** class does not exist **")
+    # Review the provided parameter values
+    # Replace underscores with spaces if the value is wrapped in double quotes
+        if value.startswith('"'):
+            value = value.strip('"').replace("_", " ")
+        else:
+            try:
+                value = eval(value)
+            except Exception:
+                print("** unable to process {} **".format(value))
+                pass
+
+    # Check if the class instance has the specified attribute key
+        if hasattr(new_instance, key):
+            setattr(new_instance, key, value)
+
+        storage.new(new_instance)
+        print(new_instance.id)
+        new_instance.save()
 
     def help_create(self):
         """ Help information for the create method """
