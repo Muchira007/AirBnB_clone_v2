@@ -120,36 +120,38 @@ class HBNBCommand(cmd.Cmd):
         try:
             if not args:
                 raise SyntaxError()
+
             new_list = args.split(" ")
             kwargs = {}
             for i in range(1, len(new_list)):
                 key, value = tuple(new_list[i].split("="))
-                if value[o] == '"':
+                if value[0] == '"':
                     value = value.strip('"').replace("_", " ")
                 else:
                     try:
                         value = eval(value)
                     except (SyntaxError, NameError):
                         continue
-                    kwargs[key] = value
+                kwargs[key] = value
 
-                if kwargs == {}:
-                    obj = eval(new_LIST[0])()
-                else:
-                    obj = eval(new_list[0])(**kwargs)
-                    storage.new(obj)
-                print(obj.id)
-                obj.save()
+            if kwargs == {}:
+                obj = eval(new_list[0])()
+            else:
+                obj = eval(new_list[0])(**kwargs)
+                storage.new(obj)
 
-            except SyntaxError:
-                print("**class name missing**")
-            except NameError:
-                print("**class does not exist**")
+            print(obj.id)
+            obj.save()
+
+        except SyntaxError as e:
+            print(e)
+        except NameError:
+            print("**class does not exist**")
 
     def help_create(self):
         """ Help information for the create method """
         print("Creates a class of any type")
-        print("[Usage]: create <className>\n")
+        print("[Usage]: create <className><key1=value1> <key2=value2> ...\n")
 
     def do_show(self, args):
         """ Method to show an individual object """
