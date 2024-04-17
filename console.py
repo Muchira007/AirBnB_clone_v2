@@ -10,6 +10,7 @@ from models.state import State
 from models.city import City
 from models.amenity import Amenity
 from models.review import Review
+from datetime import datetime
 
 
 class HBNBCommand(cmd.Cmd):
@@ -74,7 +75,7 @@ class HBNBCommand(cmd.Cmd):
                 if pline:
                     # check for *args or **kwargs
                     if pline[0] == '{' and pline[-1] == '}'\
-                            and type(eval(pline)) == dict:
+                            and type(eval(pline)) is dict:
                         _args = pline
                     else:
                         _args = pline.replace(',', '')
@@ -114,43 +115,49 @@ class HBNBCommand(cmd.Cmd):
         pass
 
     def do_create(self, args):
-        """ Create an object of any class....
-        allow for parameters to be passed
-        with syntax <key value>=<value>"""
+        """ Create an object of any class
+        Update to allow for oject creation with given parameters
+        usage: creat <Class name> <param 1> <param 2> <param 3> ...
+        parameter syntax: key=value
+
+        create Place city_id="0001" user_id="0001" name="My_little_house"
+        number_rooms=4 number_bathrooms=2 max_guest=10 price_by_night=300
+        latitude=37.773972 longitude=-122.431297
+        """
         try:
             class_name = args.split(" ")[0]
         except IndexError:
             pass
 
         if not class_name:
-            print("** please provide a class name **")
+            print("** class name missing **")
             return
-
         elif class_name not in HBNBCommand.classes:
-            print("** the specified class does not exist **")
+            print("** class doesn't exist **")
             return
 
+        # split the passed arguments into tokens separated by ' '
         tokens = args.split(" ")
         new_instance = eval(class_name)()
 
         for item in range(1, len(tokens)):
             key, value = tuple(tokens[item].split("="))
 
-    # Review the provided parameter values
-    # Replace underscores with spaces if the value is wrapped in double quotes
-        if value.startswith('"'):
-            value = value.strip('"').replace("_", " ")
-        else:
-            try:
-                value = eval(value)
-            except Exception:
-                print("** unable to process {} **".format(value))
-                pass
+            # review the passed parameter values
+            # replace '_' with space ' '
+            if value.startswith('"'):
+                value = value.strip('"').replace("_", " ")
+            else:
+                try:
+                    value = eval(value)
+                except Exception:
+                    print("** couldn't evaluate {} **".format(value))
+                    pass
+            # check if class instance has an attrinute key
+            if hasattr(new_instance, key):
+                setattr(new_instance, key, value)
 
-    # Check if the class instance has the specified attribute key
-        if hasattr(new_instance, key):
-            setattr(new_instance, key, value)
-
+        # save the instance
         storage.new(new_instance)
         print(new_instance.id)
         new_instance.save()
@@ -158,7 +165,7 @@ class HBNBCommand(cmd.Cmd):
     def help_create(self):
         """ Help information for the create method """
         print("Creates a class of any type")
-        print("[Usage]: create <className><key1=value1> <key2=value2> ...\n")
+        print("[Usage]: create <className>\n")
 
     def do_show(self, args):
         """ Method to show an individual object """
@@ -348,6 +355,7 @@ class HBNBCommand(cmd.Cmd):
         """ Help information for the update class """
         print("Updates an object with new information")
         print("Usage: update <className> <id> <attName> <attVal>\n")
+
 
 if __name__ == "__main__":
     HBNBCommand().cmdloop()
