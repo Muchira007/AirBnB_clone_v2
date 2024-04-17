@@ -30,12 +30,10 @@ class BaseModel:
         self.updated_at = datetime.utcnow()
         if kwargs:
             for key, value in kwargs.items():
-                # check if the class has an attribute matching key
-                if hasattr(self, key):
-                    setattr(self, key, value)
-
                 if key == "created_at" or key == "updated_at":
                     value = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f')
+                if hasattr(self, key):
+                    setattr(self, key, value)
 
     def __str__(self):
         """Returns a string representation of the instance"""
