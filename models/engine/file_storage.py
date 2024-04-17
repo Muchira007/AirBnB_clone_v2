@@ -1,13 +1,6 @@
 #!/usr/bin/python3
 """This module defines a class to manage file storage for hbnb clone"""
 import json
-from models.base_model import BaseModel
-from models.user import User
-from models.place import Place
-from models.state import State
-from models.city import City
-from models.amenity import Amenity
-from models.review import Review
 
 
 class FileStorage:
@@ -17,10 +10,13 @@ class FileStorage:
 
     def all(self, cls=None):
         """Returns a dictionary of models currently in storage"""
-        if cls is None:
-            return FileStorage.__objects
-        else:
-            return {k: v for k, v in FileStorage.__objects.items() if isinstance(v, cls)}
+        if cls:
+            filtered = {}
+            for key, value in self.__objects.items():
+                if type(value) == cls:
+                    filtered[key] = value
+            return filtered
+        return self.__objects
 
     def new(self, obj):
         """Adds new object to storage dictionary"""
@@ -37,30 +33,44 @@ class FileStorage:
 
     def reload(self):
         """Loads storage dictionary from file"""
+        from models.base_model import BaseModel
+        from models.user import User
+        from models.place import Place
+        from models.state import State
+        from models.city import City
+        from models.amenity import Amenity
+        from models.review import Review
 
         classes = {
                     'BaseModel': BaseModel, 'User': User, 'Place': Place,
                     'State': State, 'City': City, 'Amenity': Amenity,
                     'Review': Review
-                  }
+                    }
         try:
             temp = {}
             with open(FileStorage.__file_path, 'r') as f:
                 temp = json.load(f)
                 for key, val in temp.items():
-                        class_name = val['__class__']
-                if class_name in classes:
-                    obj_class = classes[class_name]
-                    self.__objects[key] = obj_class(**val)
-                else:
-                    print("Class {} not found. Skipping...".format(class_name))
+                    class_name = val['__class__']
+                    if class_name in classes:
+                        obj_class = classes[class_name]
+                        self.all()[key] = obj_class(**val)
+                    else:
+                        print("Class {} not found. Skipping...".format(class_name))
         except FileNotFoundError:
             pass
+
     def delete(self, obj=None):
-        """Deletes obj from storage if it exists"""
-        if obj is not None:
-            key = obj.__class__.__name__ + '.' + obj.id
-            try:
-                del self.__objects[key]
-            except KeyError:
-                pass
+        """
+        Deletes the obj from __objects if it exists
+        returns if the obj is not passed
+        """
+
+        if obj is None:
+            return
+
+        # delete key
+        side_key = "{}.{}".format(obj.__class__.__name__, obj.id)
+
+        if dl_key in self.__objects:
+            del self.__objects[side_key]
